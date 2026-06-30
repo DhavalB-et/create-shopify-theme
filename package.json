@@ -1,0 +1,25 @@
+{
+  "name": "@encircle/create-shopify-theme",
+  "version": "1.0.0",
+  "description": "Scaffold a new Shopify Dawn theme project with Encircle's standard tooling (Tailwind v4, Prettier, ESLint, Husky, Theme Check)",
+  "type": "module",
+  "bin": {
+    "create-shopify-theme": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "templates"
+  ],
+  "keywords": [
+    "shopify",
+    "dawn",
+    "theme",
+    "scaffold",
+    "tailwind"
+  ],
+  "author": "Encircle Technologies",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,12 @@
+# Prettier Ignore File
+
+# Auto-generated Tailwind output
+assets/application.css.liquid
+
+# Third-party app files (e.g. Globo apps)
+**/globo*
+
+# Build directories
+node_modules
+dist
+.build

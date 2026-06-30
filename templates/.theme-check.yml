@@ -1,0 +1,103 @@
+extends: theme-check:recommended
+ignore:
+  - node_modules/**
+  - snippets/*-icon.liquid
+  - assets/application.css.liquid
+  - .shopify/
+
+DeprecateBgsizes:
+  enabled: true
+  severity: error
+DeprecateLazysizes:
+  enabled: true
+  severity: error
+DeprecatedFilter:
+  enabled: true
+  severity: error
+DeprecatedTag:
+  enabled: true
+  severity: error
+ImgWidthAndHeight:
+  enabled: true
+  severity: error
+JSONSyntaxError:
+  enabled: true
+  severity: error
+LiquidHTMLSyntaxError:
+  enabled: true
+  severity: error
+MatchingTranslations:
+  enabled: true
+  severity: error
+MissingAsset:
+  enabled: true
+  severity: error
+MissingTemplate:
+  enabled: true
+  severity: error
+UnclosedHTMLElement:
+  enabled: true
+  severity: warning
+UndefinedObject:
+  enabled: true
+  severity: error
+UnusedAssign:
+  enabled: true
+  severity: error
+ValidJSON:
+  enabled: true
+  severity: error
+ValidSchema:
+  enabled: true
+  severity: error
+VariableName:
+  enabled: true
+  severity: error
+  format: snake_case
+AssetPreload:
+  enabled: true
+  severity: error
+CaptureOnContentForBlock:
+  enabled: true
+  severity: error
+CdnPreconnect:
+  enabled: true
+  severity: error
+ContentForHeaderModification:
+  enabled: true
+  severity: error
+PaginationSize:
+  enabled: true
+  severity: error
+  minSize: 1
+  maxSize: 50
+ParserBlockingScript:
+  enabled: true
+  severity: error
+RemoteAsset:
+  enabled: true
+  severity: warning
+RequiredLayoutThemeObject:
+  enabled: true
+  severity: error
+TranslationKeyExists:
+  enabled: true
+  severity: error
+UniqueStaticBlockId:
+  enabled: true
+  severity: error
+UnknownFilter:
+  enabled: true
+  severity: error
+ValidHTMLTranslation:
+  enabled: true
+  severity: error
+ValidStaticBlockType:
+  enabled: true
+  severity: error
+ValidBlockTarget:
+  enabled: true
+  severity: error
+JSONMissingBlock:
+  enabled: true
+  severity: error

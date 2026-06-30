@@ -1,0 +1,27 @@
+{
+  "name": "shopify-dawn-theme",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shopify Dawn theme customized with Encircle's standard tooling",
+  "scripts": {
+    "build": "npx @tailwindcss/cli -i css/application.css -o assets/application.css.liquid -w -m",
+    "format": "prettier --write snippets/ templates/ sections/ layout/ config/ assets/",
+    "lint": "eslint . --ext .js",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.js": "eslint --fix",
+    "*.{js,jsx,ts,tsx,css,md,liquid}": "prettier --write"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@shopify/prettier-plugin-liquid": "^1.7.4",
+    "@tailwindcss/cli": "^4.0.0",
+    "eslint": "^9.15.0",
+    "globals": "^15.12.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.4.1",
+    "tailwindcss": "^4.0.0"
+  }
+}

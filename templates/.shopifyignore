@@ -1,0 +1,12 @@
+package.json
+package-lock.json
+node_modules/*
+eslint.config.mjs
+.prettierrc
+.prettierignore
+.theme-check.yml
+.husky/*
+.husky
+css/*
+css
+CLAUDE.md
