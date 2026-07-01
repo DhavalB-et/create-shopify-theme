@@ -107,11 +107,42 @@ const huskyHook = path.join(targetDir, '.husky', 'pre-commit');
 fs.writeFileSync(huskyHook, 'npx lint-staged\nnpx shopify theme check\n');
 fs.chmodSync(huskyHook, 0o755);
 
-console.log(`
-✅ Project "${projectName}" ready.
+const RESET = '\x1b[0m';
+const BOLD  = '\x1b[1m';
+const DIM   = '\x1b[2m';
+const CYAN  = '\x1b[36m';
+const GREEN = '\x1b[32m';
 
-Next steps:
-  cd ${projectName}
-  npm run build
-  shopify theme dev --store=your-store.myshopify.com
-`);
+const boxLines = [
+  { raw: `  ✅  Project "${projectName}" is ready!`, type: 'title' },
+  { raw: `` },
+  { raw: `  Next steps:`, type: 'heading' },
+  { raw: `` },
+  { raw: `  1  cd ${projectName}`, type: 'step' },
+  { raw: `  2  npm run build`, type: 'step' },
+  { raw: `  3  shopify theme dev --store=your-store.myshopify.com`, type: 'step' },
+  { raw: `` },
+];
+
+const W = Math.max(...boxLines.map(l => l.raw.length));
+
+const styledContent = ({ raw, type }) => {
+  const pad = ' '.repeat(W - raw.length);
+  switch (type) {
+    case 'title':
+      return `${BOLD}${GREEN}${raw}${RESET}${pad}`;
+    case 'heading':
+      return `${BOLD}${raw}${RESET}${pad}`;
+    case 'step':
+      return raw.replace(/^(\s+)(\d+)(\s+)/, (_, a, n, c) => `${a}${DIM}${n}${RESET}${c}`) + pad;
+    default:
+      return raw + pad;
+  }
+};
+
+console.log('');
+console.log(`${CYAN}╭${'─'.repeat(W + 2)}╮${RESET}`);
+for (const line of boxLines) {
+  console.log(`${CYAN}│${RESET} ${styledContent(line)} ${CYAN}│${RESET}`);
+}
+console.log(`${CYAN}╰${'─'.repeat(W + 2)}╯${RESET}`);
