@@ -2,7 +2,7 @@
   "name": "shopify-dawn-theme",
   "version": "1.0.0",
   "private": true,
-  "description": "Shopify Dawn theme customized with Encircle's standard tooling",
+  "description": "",
   "scripts": {
     "build": "npx @tailwindcss/cli -i css/application.css -o assets/application.css.liquid -w -m",
     "format": "prettier --write snippets/ templates/ sections/ layout/ config/ assets/",

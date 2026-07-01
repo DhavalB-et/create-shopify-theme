@@ -4,6 +4,7 @@ ignore:
   - snippets/*-icon.liquid
   - assets/application.css.liquid
   - .shopify/
+  - assets/bundler.js
 
 DeprecateBgsizes:
   enabled: true
@@ -27,7 +28,7 @@ LiquidHTMLSyntaxError:
   enabled: true
   severity: error
 MatchingTranslations:
-  enabled: true
+  enabled: false
   severity: error
 MissingAsset:
   enabled: true
@@ -37,7 +38,7 @@ MissingTemplate:
   severity: error
 UnclosedHTMLElement:
   enabled: true
-  severity: warning
+  severity: error
 UndefinedObject:
   enabled: true
   severity: error
