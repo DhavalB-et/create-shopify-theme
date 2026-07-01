@@ -1,53 +1,78 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
 
+/** @type {import('eslint').Linter.Config[]} */
 export default [
-   {
+  // Global ignores — ESLint won't touch these files at all
+  {
     ignores: [
       "assets/**/*.min.js",
       "assets/**/*.min.css",
-      "assets/application.css.liquid",
-      "assets/global.js",
-      "assets/custom.js",
-      "assets/facets.js",
-      "assets/cart.js"
+      // Don't lint Dawn's own JS files — we customize via new files, not by editing Dawn's
+      "assets/*.js",
+      // ...but DO lint files we create with the `custom-` prefix
+      "!assets/custom-*.js",
     ],
   },
+  // Rules and globals for the JS we actually write
   {
     files: ["**/*.js"],
-    ignores: ["assets/**/*.min.js", "assets/**/*.min.css", "assets/application.css.liquid", "assets/global.js"],
-    languageOptions: { sourceType: "module", ecmaVersion: "latest" },
+    languageOptions: {
+      sourceType: "module",
+      ecmaVersion: "latest",
+      globals: {
+        ...globals.browser,
+        // Dawn's cross-file globals — declared so our custom code can use them
+        Shopify: "readonly",
+        routes: "readonly",
+        trapFocus: "readonly",
+        removeTrapFocus: "readonly",
+        onKeyUpEscape: "readonly",
+        debounce: "readonly",
+        throttle: "readonly",
+        fetchConfig: "readonly",
+        subscribe: "readonly",
+        publish: "readonly",
+        PUB_SUB_EVENTS: "readonly",
+        ON_CHANGE_DEBOUNCE_TIMER: "readonly",
+        CartPerformance: "readonly",
+        CartItems: "readonly",
+        HTMLUpdateUtility: "readonly",
+        SectionId: "readonly",
+        ModalDialog: "readonly",
+        DetailsModal: "readonly",
+        DetailsDisclosure: "readonly",
+        DeferredMedia: "readonly",
+        BulkAdd: "readonly",
+        SearchForm: "readonly",
+        CustomerAddresses: "readonly",
+        pauseAllMedia: "readonly",
+        initializeScrollAnimationTrigger: "readonly",
+        enableZoomOnHover: "readonly",
+      },
+    },
     rules: {
-      "no-unused-vars": "error", // Disallows variables that are declared but never used in the code
-      "no-console": "error", // error about console logs
-      "no-debugger": "error", // Disallows debugger statements
-      "no-alert": "error", // Discourages use of alert, confirm, and prompt
-      eqeqeq: ["error", "always"], // Enforces strict equality (=== and !==)
-      curly: "error", // Requires curly braces for all control statements
-      "no-undef": "error", // Disallows use of undeclared variables
-      "no-use-before-define": ["error", { functions: false, classes: true }], // Prevents usage before declaration
-      "no-shadow": "error", // Disallows variable shadowing
-      "prefer-const": "error", // Enforces use of const where possible
-      "no-var": "error", // Enforces let/const over var
-      "prefer-template": "error", // Encourages template literals instead of string concatenation
-      "no-loop-func": "error", // Disallows function definitions inside loops
-      "max-depth": ["error", 4], // Limits nesting depth
-      "no-duplicate-imports": "error", // Prevents duplicate imports
-      "no-implied-eval": "error", // Prevents use of `setTimeout` and `setInterval` with string arguments
-      "no-self-compare": "error", // Prevents `x == x` which is usually a mistake
-      "no-useless-return": "error", // Disallows redundant `return` statements
-      "no-unsafe-optional-chaining": "error", // Avoids errors from unsafe `?.` operations
-      "array-callback-return": "error", // Ensures `.map()`, `.filter()`, and `.reduce()` have return statements
+      "no-unused-vars": "error",
+      "no-console": "error",
+      "no-debugger": "error",
+      "no-alert": "error",
+      "eqeqeq": ["error", "always"],
+      "curly": "error",
+      "no-undef": "error",
+      "no-use-before-define": ["error", { functions: false, classes: true }],
+      "no-shadow": "error",
+      "prefer-const": "error",
+      "no-var": "error",
+      "prefer-template": "error",
+      "no-loop-func": "error",
+      "max-depth": ["error", 4],
+      "no-duplicate-imports": "error",
+      "no-implied-eval": "error",
+      "no-self-compare": "error",
+      "no-useless-return": "error",
+      "no-unsafe-optional-chaining": "error",
+      "array-callback-return": "error",
     },
   },
-  { languageOptions: { globals: globals.browser } },
   pluginJs.configs.recommended,
-  {
-    rules: {
-      "no-undef": "off",
-      "no-unused-vars": "off",
-      "no-self-assign": "off",
-      "no-unreachable": "off",
-    },
-  },
 ];

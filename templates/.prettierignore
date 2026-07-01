@@ -6,6 +6,10 @@ assets/application.css.liquid
 # Third-party app files (e.g. Globo apps)
 **/globo*
 
+# Don't reformat Dawn's own JS/CSS — leave upstream files alone
+assets/*.js
+assets/*.css
+
 # Build directories
 node_modules
 dist
