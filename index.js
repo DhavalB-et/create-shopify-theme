@@ -107,20 +107,38 @@ const huskyHook = path.join(targetDir, '.husky', 'pre-commit');
 fs.writeFileSync(huskyHook, 'npx lint-staged\nnpx shopify theme check\n');
 fs.chmodSync(huskyHook, 0o755);
 
+step('Setup complete!');
+const rlBuild = readline.createInterface({ input, output });
+const buildAnswer = (await rlBuild.question('Run `npm run build` now? (Y/n) ')).trim().toLowerCase();
+rlBuild.close();
+
+let buildRan = false;
+if (buildAnswer === '' || buildAnswer === 'y' || buildAnswer === 'yes') {
+  step('Running npm run build...');
+  try {
+    run('npm run build', { cwd: targetDir });
+    buildRan = true;
+  } catch (err) {
+    console.log('  ⚠️  Build failed. Run it manually later: npm run build');
+  }
+}
+
 const RESET = '\x1b[0m';
 const BOLD  = '\x1b[1m';
 const DIM   = '\x1b[2m';
 const CYAN  = '\x1b[36m';
 const GREEN = '\x1b[32m';
 
+const nextSteps = [`cd ${projectName}`];
+if (!buildRan) nextSteps.push('npm run build');
+nextSteps.push('shopify theme dev --store=your-store.myshopify.com');
+
 const boxLines = [
   { raw: `  ✅  Project "${projectName}" is ready!`, type: 'title' },
   { raw: `` },
   { raw: `  Next steps:`, type: 'heading' },
   { raw: `` },
-  { raw: `  1  cd ${projectName}`, type: 'step' },
-  { raw: `  2  npm run build`, type: 'step' },
-  { raw: `  3  shopify theme dev --store=your-store.myshopify.com`, type: 'step' },
+  ...nextSteps.map((s, i) => ({ raw: `  ${i + 1}  ${s}`, type: 'step' })),
   { raw: `` },
 ];
 
