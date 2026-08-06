@@ -14,6 +14,12 @@ const THEMES = {
   horizon: { repo: 'https://github.com/Shopify/horizon.git', label: 'Horizon' },
 };
 
+const RESET = '\x1b[0m';
+const BOLD  = '\x1b[1m';
+const DIM   = '\x1b[2m';
+const CYAN  = '\x1b[36m';
+const GREEN = '\x1b[32m';
+
 // A plain rl.question() drops any line that arrives while no question is
 // pending — fatal when piped/scripted input delivers multiple answers in one
 // burst. Queue every 'line' event so no answer is ever lost, regardless of
@@ -39,6 +45,57 @@ function ask(prompt) {
   });
 }
 
+// Arrow-key radio selector. Requires a real TTY — callers must fall back to
+// a text prompt when input isn't interactive (piped/scripted input).
+function selectTheme(themes, defaultKey) {
+  const keys = Object.keys(themes);
+  let index = Math.max(0, keys.indexOf(defaultKey));
+
+  const render = (first) => {
+    if (!first) output.write(`\x1b[${keys.length}A`);
+    for (const key of keys) {
+      const selected = key === keys[index];
+      const marker = selected ? `${CYAN}❯${RESET}` : ' ';
+      const label = selected ? `${BOLD}${themes[key].label}${RESET}` : themes[key].label;
+      output.write(`\x1b[2K\r  ${marker} ${label}\n`);
+    }
+  };
+
+  return new Promise((resolve) => {
+    output.write(`Theme ${DIM}(Use arrow keys, Enter to select)${RESET}\n`);
+    render(true);
+
+    rl.pause();
+    input.setRawMode(true);
+    input.resume();
+    input.setEncoding('utf8');
+
+    const cleanup = () => {
+      input.removeListener('data', onData);
+      input.setRawMode(false);
+      rl.resume();
+    };
+
+    const onData = (chunk) => {
+      if (chunk === '\x03') {
+        cleanup();
+        process.exit(130);
+      } else if (chunk === '\r' || chunk === '\n') {
+        cleanup();
+        resolve(keys[index]);
+      } else if (chunk === '\x1b[A' || chunk === 'k') {
+        index = (index - 1 + keys.length) % keys.length;
+        render(false);
+      } else if (chunk === '\x1b[B' || chunk === 'j') {
+        index = (index + 1) % keys.length;
+        render(false);
+      }
+    };
+
+    input.on('data', onData);
+  });
+}
+
 function getThemeFlag() {
   const flag = process.argv.find((arg) => arg.startsWith('--theme='));
   if (!flag) return null;
@@ -53,6 +110,8 @@ function getThemeFlag() {
 async function getTheme() {
   const flagged = getThemeFlag();
   if (flagged) return flagged;
+
+  if (input.isTTY) return selectTheme(THEMES, 'dawn');
 
   let theme;
   while (!theme) {
@@ -187,12 +246,6 @@ if (buildAnswer === '' || buildAnswer === 'y' || buildAnswer === 'yes') {
     console.log('  ⚠️  Build failed. Run it manually later: npm run build');
   }
 }
-
-const RESET = '\x1b[0m';
-const BOLD  = '\x1b[1m';
-const DIM   = '\x1b[2m';
-const CYAN  = '\x1b[36m';
-const GREEN = '\x1b[32m';
 
 const nextSteps = [`cd ${projectName}`];
 if (!buildRan) nextSteps.push('npm run build');
