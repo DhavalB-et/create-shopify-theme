@@ -1,6 +1,6 @@
 {
   "name": "shopify-theme-setup",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Scaffold a new Shopify Dawn or Horizon theme project with Encircle's standard tooling (Tailwind v4, Prettier, ESLint, Husky, Theme Check)",
   "type": "module",
   "bin": {
