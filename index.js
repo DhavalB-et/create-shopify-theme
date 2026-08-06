@@ -2,49 +2,115 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import readline from 'node:readline/promises';
+import readline from 'node:readline';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { stdin as input, stdout as output } from 'node:process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-async function getProjectName() {
-  let name = process.argv[2];
+const THEMES = {
+  dawn: { repo: 'https://github.com/Shopify/dawn.git', label: 'Dawn' },
+  horizon: { repo: 'https://github.com/Shopify/horizon.git', label: 'Horizon' },
+};
 
-  if (name === '--help' || name === '-h') {
+// A plain rl.question() drops any line that arrives while no question is
+// pending — fatal when piped/scripted input delivers multiple answers in one
+// burst. Queue every 'line' event so no answer is ever lost, regardless of
+// timing relative to when it's asked for.
+const rl = readline.createInterface({ input, output });
+const lineQueue = [];
+let pendingResolve = null;
+rl.on('line', (line) => {
+  if (pendingResolve) {
+    const resolve = pendingResolve;
+    pendingResolve = null;
+    resolve(line);
+  } else {
+    lineQueue.push(line);
+  }
+});
+
+function ask(prompt) {
+  output.write(prompt);
+  if (lineQueue.length) return Promise.resolve(lineQueue.shift());
+  return new Promise((resolve) => {
+    pendingResolve = resolve;
+  });
+}
+
+function getThemeFlag() {
+  const flag = process.argv.find((arg) => arg.startsWith('--theme='));
+  if (!flag) return null;
+  const value = flag.split('=')[1]?.trim().toLowerCase();
+  if (!THEMES[value]) {
+    console.error(`\n❌ Unknown theme "${value}". Choose one of: ${Object.keys(THEMES).join(', ')}`);
+    process.exit(1);
+  }
+  return value;
+}
+
+async function getTheme() {
+  const flagged = getThemeFlag();
+  if (flagged) return flagged;
+
+  let theme;
+  while (!theme) {
+    const answer = (await ask(`Theme (${Object.keys(THEMES).join('/')}) [dawn]: `)).trim().toLowerCase();
+    const choice = answer || 'dawn';
+    if (!THEMES[choice]) {
+      console.log(`  Choose one of: ${Object.keys(THEMES).join(', ')}`);
+      continue;
+    }
+    theme = choice;
+  }
+  return theme;
+}
+
+async function getProjectName() {
+  let name = process.argv[2]?.startsWith('--') ? undefined : process.argv[2];
+
+  if (process.argv.includes('--help') || process.argv.includes('-h')) {
     console.log(`
 Usage:
-  npx shopify-theme-setup                → prompts for project name
-  npx shopify-theme-setup <project-name> → uses the name you passed
+  npx shopify-theme-setup                              → prompts for project name and theme
+  npx shopify-theme-setup <project-name>                → uses the name you passed
+  npx shopify-theme-setup <project-name> --theme=horizon → scaffolds the Horizon theme instead of Dawn
 
 Example:
-  npx shopify-theme-setup acme-store
+  npx shopify-theme-setup acme-store --theme=dawn
 `);
     process.exit(0);
   }
 
-  if (!name) {
-    const rl = readline.createInterface({ input, output });
-    while (!name) {
-      const answer = (await rl.question('Project name: ')).trim();
-      if (!answer) {
-        console.log('  Project name is required.');
-        continue;
-      }
-      if (!/^[a-z0-9][a-z0-9-_]*$/i.test(answer)) {
-        console.log('  Use only letters, numbers, hyphens, or underscores. No spaces.');
-        continue;
-      }
-      name = answer;
+  const NAME_PATTERN = /^[a-z0-9][a-z0-9-_]*$/i;
+
+  if (name) {
+    if (!NAME_PATTERN.test(name)) {
+      console.error('\n❌ Project name must use only letters, numbers, hyphens, or underscores. No spaces.');
+      process.exit(1);
     }
-    rl.close();
+    return name;
+  }
+
+  while (!name) {
+    const answer = (await ask('Project name: ')).trim();
+    if (!answer) {
+      console.log('  Project name is required.');
+      continue;
+    }
+    if (!NAME_PATTERN.test(answer)) {
+      console.log('  Use only letters, numbers, hyphens, or underscores. No spaces.');
+      continue;
+    }
+    name = answer;
   }
 
   return name;
 }
 
 const projectName = await getProjectName();
+const theme = await getTheme();
 const targetDir = path.resolve(process.cwd(), projectName);
 
 if (fs.existsSync(targetDir)) {
@@ -55,12 +121,12 @@ if (fs.existsSync(targetDir)) {
 const run = (cmd, opts = {}) => execSync(cmd, { stdio: 'inherit', ...opts });
 const step = (msg) => console.log(`\n→ ${msg}`);
 
-step('Cloning latest Dawn theme from Shopify...');
-run(`git clone --depth 1 https://github.com/Shopify/dawn.git "${projectName}"`);
+step(`Cloning latest ${THEMES[theme].label} theme from Shopify...`);
+run(`git clone --depth 1 ${THEMES[theme].repo} "${projectName}"`);
 fs.rmSync(path.join(targetDir, '.git'), { recursive: true, force: true });
 
 step('Applying standard configs...');
-const templatesDir = path.join(__dirname, 'templates');
+const templatesDir = path.join(__dirname, 'templates', theme);
 
 function copyTemplates(src, dest) {
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
@@ -108,9 +174,8 @@ fs.writeFileSync(huskyHook, 'npx lint-staged\nnpx shopify theme check\n');
 fs.chmodSync(huskyHook, 0o755);
 
 step('Setup complete!');
-const rlBuild = readline.createInterface({ input, output });
-const buildAnswer = (await rlBuild.question('Run `npm run build` now? (Y/n) ')).trim().toLowerCase();
-rlBuild.close();
+const buildAnswer = (await ask('Run `npm run build` now? (Y/n) ')).trim().toLowerCase();
+rl.close();
 
 let buildRan = false;
 if (buildAnswer === '' || buildAnswer === 'y' || buildAnswer === 'yes') {
