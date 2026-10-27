@@ -73,6 +73,9 @@ function selectTheme(themes, defaultKey) {
     const cleanup = () => {
       input.removeListener('data', onData);
       input.setRawMode(false);
+      // readline also saw the Enter keypress and queued an empty line — drop
+      // it so it doesn't silently answer the next prompt.
+      lineQueue.length = 0;
       rl.resume();
     };
 
@@ -185,10 +188,13 @@ run(`git clone --depth 1 ${THEMES[theme].repo} "${projectName}"`);
 fs.rmSync(path.join(targetDir, '.git'), { recursive: true, force: true });
 
 step('Applying standard configs...');
-const templatesDir = path.join(__dirname, 'templates', theme);
+const templatesRoot = path.join(__dirname, 'templates');
 
-function copyTemplates(src, dest) {
+// Top-level files in templates/ are shared by every theme; subdirectories
+// named after a theme hold theme-specific files and are skipped here.
+function copyTemplates(src, dest, { skipThemeDirs = false } = {}) {
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    if (skipThemeDirs && entry.isDirectory() && THEMES[entry.name]) continue;
     const srcPath = path.join(src, entry.name);
     let destName = entry.name;
     if (destName === 'gitignore') destName = '.gitignore';
@@ -201,7 +207,8 @@ function copyTemplates(src, dest) {
     }
   }
 }
-copyTemplates(templatesDir, targetDir);
+copyTemplates(templatesRoot, targetDir, { skipThemeDirs: true });
+copyTemplates(path.join(templatesRoot, theme), targetDir);
 
 step('Injecting application.css into layout/theme.liquid...');
 const themeLiquidPath = path.join(targetDir, 'layout', 'theme.liquid');
@@ -233,14 +240,15 @@ fs.writeFileSync(huskyHook, 'npx lint-staged\nnpx shopify theme check\n');
 fs.chmodSync(huskyHook, 0o755);
 
 step('Setup complete!');
-const buildAnswer = (await ask('Run `npm run build` now? (Y/n) ')).trim().toLowerCase();
+const buildAnswer = (await ask('Build Tailwind CSS now? (Y/n) ')).trim().toLowerCase();
 rl.close();
 
 let buildRan = false;
 if (buildAnswer === '' || buildAnswer === 'y' || buildAnswer === 'yes') {
-  step('Running npm run build...');
+  step('Building Tailwind CSS...');
   try {
-    run('npm run build', { cwd: targetDir });
+    // One-off build — `npm run build` runs in watch mode and would never exit.
+    run('npx @tailwindcss/cli -i css/application.css -o assets/application.css.liquid -m', { cwd: targetDir });
     buildRan = true;
   } catch (err) {
     console.log('  ⚠️  Build failed. Run it manually later: npm run build');
